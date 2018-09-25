@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/animation.dart';
 
@@ -10,37 +11,80 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Animation _animation;
+  bool _visible = false;
   AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+
+
     _animationController = AnimationController(
         duration: Duration(milliseconds: 4000), vsync: this);
 
-    _animation = Tween(begin: 0.0, end: 300.0).animate(new CurvedAnimation(
+    //Animation to bounce in and out
+    _animation = Tween(begin: 0.0, end: 200.0).animate(new CurvedAnimation(
       parent: _animationController,
-      curve:  new Interval(
+      curve: new Interval(
         0.0,
-        0.20,
-        curve: Curves.linear,
+        0.25,
+        curve: Curves.bounceInOut,
       ),
     ));
 
-
-   _animation.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-
-      }
+    //Timer for when to fade in company name
+    new Timer(const Duration(milliseconds: 1500), () {
+      setState(() {
+        _visible = true;
+      });
     });
+
     _animationController.forward();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LogoAnimation(
-      animation: _animation,
-    );
+    return MaterialApp(
+        title: "Friendlychat",
+        home: Scaffold(
+          appBar: AppBar(
+            title: Text("ChangeFly"),
+            elevation:
+                Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
+          ),
+          body: Container(
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Stack(
+                  children: <Widget>[
+                    LogoAnimation(
+                      animation: _animation,
+                      logo: 'assets/changefly-cube-top.png',
+                    ),
+                    Container(
+                      child: LogoAnimation(
+                        animation: _animation,
+                        logo: 'assets/changefly-cube-left.png',
+                      ),
+                    ),
+                    LogoAnimation(
+                      animation: _animation,
+                      logo: 'assets/changefly-cube-right.png',
+                    ),
+                  ],
+                ),
+                AnimatedOpacity(
+                    opacity: _visible ? 1.0 : 0.0,
+                    duration: Duration(milliseconds: 500),
+                    child: Image.asset('assets/changefly-name.png',
+                        height: 200.0, width: 200.0))
+              ],
+            ),
+          ),
+        ));
   }
 
   @override
@@ -50,30 +94,23 @@ class MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   }
 }
 
+///
+/// Class That create the animation for the images
+/// @Animation this animation used for the Image
+/// @Logo the name of the asset
+///
 class LogoAnimation extends AnimatedWidget {
-  LogoAnimation({Key key, Animation animation})
+  final String logo;
+  LogoAnimation({Key key, Animation animation, this.logo})
       : super(key: key, listenable: animation);
 
   @override
   Widget build(BuildContext context) {
     Animation animation = listenable;
-    return Center(
-      child: Row(
-        children: <Widget>[
-          Container(
-            height: animation
-                .value,
-            width: animation.value,
-            child: Image.asset('assets/changefly-cube-left.png', height: 10.0, width: 10.0),
-          ),
-          Container(
-            height: animation
-                .value,
-            width: animation.value,
-            child: Image.asset('assets/changefly-cube-right.png', height: 10.0, width: 10.0),
-          ),
-        ],
-      ),
+    return Image.asset(
+      logo,
+      height: animation.value,
+      width: animation.value,
     );
   }
 }
